@@ -1,5 +1,5 @@
 // Calendar object to store events
-const calendar = {};
+const calendarEvents = {};
 
 // Function to generate calendar for a given month and year
 function generateCalendar(month, year) {
@@ -8,22 +8,23 @@ function generateCalendar(month, year) {
   
   const calendarBody = document.getElementById("calendarBody");
   calendarBody.innerHTML = "";
-
+  
   let date = 1;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 6; i++) { // 6 rows to cover all possibilities
     const row = document.createElement("tr");
-    for (let j = 0; j < 7; j++) {
+    for (let j = 0; j < 7; j++) { // 7 days a week
       const cell = document.createElement("td");
       if (i === 0 && j < firstDayOfMonth) {
-        const emptyCell = document.createElement("span");
-        emptyCell.textContent = "";
-        cell.appendChild(emptyCell);
+        // Before the first day of the month
+        cell.classList.add("calendar-empty");
       } else if (date > daysInMonth) {
-        break;
+        // After the last day of the month
+        cell.classList.add("calendar-empty");
       } else {
+        // Current month's days
         const dayCell = document.createElement("span");
         dayCell.textContent = date;
-        dayCell.dataset.date = `${year}-${month + 1}-${date}`;
+        dayCell.dataset.date = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
         dayCell.classList.add("calendar-day");
         cell.appendChild(dayCell);
         date++;
@@ -31,88 +32,72 @@ function generateCalendar(month, year) {
       row.appendChild(cell);
     }
     calendarBody.appendChild(row);
+    // If we've reached the end of the month, stop adding new rows
+    if (date > daysInMonth) {
+      break;
+    }
   }
 }
 
 // Function to add event
 function addEvent() {
-  const event = document.getElementById("event").value;
-  const time = document.getElementById("time").value;
-  const location = document.getElementById("location").value;
-
-  // Get the selected date
   const selectedDate = document.getElementById("selectedDate").textContent;
-
-  // Create event object
-  const newEvent = { time, location };
-
-  // Check if the selected date already exists in the calendar
-  if (calendar.hasOwnProperty(selectedDate)) {
-    // Add event to existing date
-    calendar[selectedDate][event] = newEvent;
-  } else {
-    // Create new date entry and add event
-    calendar[selectedDate] = { [event]: newEvent };
+  if (selectedDate) {
+    const eventText = document.getElementById("event").value;
+    const time = document.getElementById("time").value;
+    const location = document.getElementById("location").value;
+    const eventDetails = { eventText, time, location };
+    
+    if (!calendarEvents[selectedDate]) {
+      calendarEvents[selectedDate] = [];
+    }
+    
+    calendarEvents[selectedDate].push(eventDetails);
+    updateChecklist(selectedDate);
   }
-
+  
   // Clear input fields
-  document.getElementById("event").value = "";
-  document.getElementById("time").value = "";
-  document.getElementById("location").value = "";
-
-  // Update checklist
-  updateChecklist(selectedDate);
+  document.getElementById("event").value = '';
+  document.getElementById("time").value = '';
+  document.getElementById("location").value = '';
 }
 
 // Function to update checklist for a given date
 function updateChecklist(date) {
   const eventsList = document.getElementById("eventsList");
-  eventsList.innerHTML = ""; // Clear previous entries
-
-  if (calendar.hasOwnProperty(date)) {
-    // Display events for the given date
-    const events = calendar[date];
-    for (const event in events) {
-      if (events.hasOwnProperty(event)) {
-        const { time, location } = events[event];
-        const listItem = document.createElement("li");
-        listItem.textContent = `${event} - Time: ${time}, Location: ${location}`;
-        eventsList.appendChild(listItem);
-      }
-    }
-  } else {
-    // No events for the given date
+  eventsList.innerHTML = ''; // Clear previous entries
+  const events = calendarEvents[date] || [];
+  events.forEach(event => {
     const listItem = document.createElement("li");
-    listItem.textContent = "No events for today.";
+    listItem.textContent = `${event.eventText} at ${event.time} in ${event.location}`;
     eventsList.appendChild(listItem);
-  }
+  });
 }
 
 // Function to handle click on calendar days
 function handleDayClick(event) {
-  const selectedDate = event.target.dataset.date;
-  updateChecklist(selectedDate);
-
-  // Show event input section
-  document.getElementById("eventInput").style.display = "block";
-  // Set the selected date
-  document.getElementById("selectedDate").textContent = selectedDate;
+  if (event.target.classList.contains('calendar-day')) {
+    const selectedDate = event.target.dataset.date;
+    document.getElementById("selectedDate").textContent = selectedDate;
+    updateChecklist(selectedDate);
+    document.getElementById("eventInput").style.display = 'block';
+  }
 }
 
-// Initial call to generate calendar for the current month
-const currentDate = new Date();
-const currentMonth = currentDate.getMonth();
-const currentYear = currentDate.getFullYear();
-generateCalendar(currentMonth, currentYear);
-document.getElementById("currentMonth").textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentDate);
-
-// Add event listener to each day cell of the calendar
-document.querySelectorAll(".calendar-day").forEach(dayCell => {
-  dayCell.addEventListener("click", handleDayClick);
+// Event listeners for calendar days and the Add Event button
+document.addEventListener('DOMContentLoaded', () => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  generateCalendar(currentMonth, currentYear);
+  
+  document.getElementById("currentMonth").textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  
+  document.getElementById("calendarBody").addEventListener('click', handleDayClick);
+  
+  document.getElementById("addEventBtn").addEventListener('click', addEvent);
+  
+  // Hide event input section initially
+  document.getElementById("eventInput").style.display = 'none';
 });
-
-// Add event listener to Add Event button
-document.getElementById("addEventBtn").addEventListener("click", addEvent);
-
-// Hide event input section initially
-document.getElementById("eventInput").style.display = "none";
