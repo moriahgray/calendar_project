@@ -5,23 +5,19 @@ const calendarEvents = {};
 function generateCalendar(month, year) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
-  
   const calendarBody = document.getElementById("calendarBody");
   calendarBody.innerHTML = "";
-  
+
   let date = 1;
-  for (let i = 0; i < 6; i++) { // 6 rows to cover all possibilities
+  for (let i = 0; i < 6; i++) {
     const row = document.createElement("tr");
-    for (let j = 0; j < 7; j++) { // 7 days a week
+    for (let j = 0; j < 7; j++) {
       const cell = document.createElement("td");
       if (i === 0 && j < firstDayOfMonth) {
-        // Before the first day of the month
         cell.classList.add("calendar-empty");
       } else if (date > daysInMonth) {
-        // After the last day of the month
         cell.classList.add("calendar-empty");
       } else {
-        // Current month's days
         const dayCell = document.createElement("span");
         dayCell.textContent = date;
         dayCell.dataset.date = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
@@ -32,30 +28,31 @@ function generateCalendar(month, year) {
       row.appendChild(cell);
     }
     calendarBody.appendChild(row);
-    // If we've reached the end of the month, stop adding new rows
     if (date > daysInMonth) {
       break;
     }
   }
+
+  // After generating the calendar, update the checklist to display the default message
+  updateChecklist("");
 }
 
 // Function to add event
 function addEvent() {
   const selectedDate = document.getElementById("selectedDate").textContent;
-  if (selectedDate) {
-    const eventText = document.getElementById("event").value;
-    const time = document.getElementById("time").value;
-    const location = document.getElementById("location").value;
+  const eventText = document.getElementById("event").value;
+  const time = document.getElementById("time").value;
+  const location = document.getElementById("location").value;
+  if (eventText && time && location) { // Ensure all fields are filled
     const eventDetails = { eventText, time, location };
-    
+
     if (!calendarEvents[selectedDate]) {
       calendarEvents[selectedDate] = [];
     }
-    
     calendarEvents[selectedDate].push(eventDetails);
     updateChecklist(selectedDate);
   }
-  
+
   // Clear input fields
   document.getElementById("event").value = '';
   document.getElementById("time").value = '';
@@ -65,13 +62,20 @@ function addEvent() {
 // Function to update checklist for a given date
 function updateChecklist(date) {
   const eventsList = document.getElementById("eventsList");
-  eventsList.innerHTML = ''; // Clear previous entries
-  const events = calendarEvents[date] || [];
-  events.forEach(event => {
-    const listItem = document.createElement("li");
-    listItem.textContent = `${event.eventText} at ${event.time} in ${event.location}`;
-    eventsList.appendChild(listItem);
-  });
+  eventsList.innerHTML = '';
+
+  if (calendarEvents[date] && calendarEvents[date].length > 0) {
+    calendarEvents[date].forEach(event => {
+      const listItem = document.createElement("li");
+      listItem.textContent = `${event.eventText} at ${event.time} in ${event.location}`;
+      eventsList.appendChild(listItem);
+    });
+  } else {
+    const noEventsItem = document.createElement("li");
+    noEventsItem.textContent = "Click any day to add events!";
+    noEventsItem.classList.add("no-events");
+    eventsList.appendChild(noEventsItem);
+  }
 }
 
 // Function to handle click on calendar days
@@ -79,25 +83,24 @@ function handleDayClick(event) {
   if (event.target.classList.contains('calendar-day')) {
     const selectedDate = event.target.dataset.date;
     document.getElementById("selectedDate").textContent = selectedDate;
-    updateChecklist(selectedDate);
     document.getElementById("eventInput").style.display = 'block';
+    updateChecklist(selectedDate);
   }
 }
 
-// Event listeners for calendar days and the Add Event button
 document.addEventListener('DOMContentLoaded', () => {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
-  
+
   generateCalendar(currentMonth, currentYear);
-  
+
   document.getElementById("currentMonth").textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
   
   document.getElementById("calendarBody").addEventListener('click', handleDayClick);
-  
+
   document.getElementById("addEventBtn").addEventListener('click', addEvent);
-  
-  // Hide event input section initially
-  document.getElementById("eventInput").style.display = 'none';
+
+  // Initially display the no events message for the current date
+  updateChecklist(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`);
 });
