@@ -47,6 +47,32 @@ html, body {
   font-weight: bold;
 }
 
+#eventsContainer {
+  width: 300px;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#eventsContainer h3 {
+  margin-top: 0;
+}
+
+#eventsList {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+#eventsList li {
+  padding: 5px;
+  border-bottom: 1px solid #eee;
+}
+
+#eventsList li.no-events {
+  color: #777;
+  font-style: italic;
+  text-align: center;
+}
+
 #eventInput {
   margin-top: 10px;
   display: none;
@@ -78,32 +104,6 @@ html, body {
 
 #eventInput button:hover {
   background-color: #45a049;
-}
-
-#eventsContainer {
-  width: 300px;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-#eventsContainer h3 {
-  margin-top: 0;
-}
-
-#eventsList {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-#eventsList li {
-  padding: 5px;
-  border-bottom: 1px solid #eee;
-}
-
-#eventsList li.no-events {
-  color: #777;
-  font-style: italic;
-  text-align: center;
 }
 
 @media (max-width: 600px) {
