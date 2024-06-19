@@ -1,12 +1,13 @@
-// Calendar object to store events
-const calendarEvents = {};
+let calendarEvents = JSON.parse(localStorage.getItem('calendarEvents')) || {};
 
-// Function to generate calendar for a given month and year
 function generateCalendar(month, year) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const calendarBody = document.getElementById("calendarBody");
   calendarBody.innerHTML = "";
+
+  const today = new Date();
+  const isCurrentMonth = month === today.getMonth() && year === today.getFullYear();
 
   let date = 1;
   for (let i = 0; i < 6; i++) {
@@ -22,7 +23,13 @@ function generateCalendar(month, year) {
         dayCell.textContent = date;
         dayCell.dataset.date = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
         dayCell.classList.add("calendar-day");
+
         cell.appendChild(dayCell);
+
+        if (isCurrentMonth && date === today.getDate()) {
+          cell.classList.add("calendar-today");
+        }
+
         date++;
       }
       row.appendChild(cell);
@@ -33,33 +40,32 @@ function generateCalendar(month, year) {
     }
   }
 
-  // After generating the calendar, update the checklist to display the default message
   updateChecklist("");
 }
 
-// Function to add event
 function addEvent() {
   const selectedDate = document.getElementById("selectedDate").textContent;
   const eventText = document.getElementById("event").value;
   const time = document.getElementById("time").value;
   const location = document.getElementById("location").value;
-  if (eventText && time && location) { // Ensure all fields are filled
+  if (eventText && time && location) {
     const eventDetails = { eventText, time, location };
 
     if (!calendarEvents[selectedDate]) {
       calendarEvents[selectedDate] = [];
     }
     calendarEvents[selectedDate].push(eventDetails);
+
+    localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
+
     updateChecklist(selectedDate);
   }
 
-  // Clear input fields
   document.getElementById("event").value = '';
   document.getElementById("time").value = '';
   document.getElementById("location").value = '';
 }
 
-// Function to update checklist for a given date
 function updateChecklist(date) {
   const eventsList = document.getElementById("eventsList");
   eventsList.innerHTML = '';
@@ -78,8 +84,7 @@ function updateChecklist(date) {
   }
 }
 
-// Function to handle click on calendar days
-function handleDayClick(event) {
+function handleDayDoubleClick(event) {
   if (event.target.classList.contains('calendar-day')) {
     const selectedDate = event.target.dataset.date;
     document.getElementById("selectedDate").textContent = selectedDate;
@@ -96,11 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
   generateCalendar(currentMonth, currentYear);
 
   document.getElementById("currentMonth").textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-  
-  document.getElementById("calendarBody").addEventListener('click', handleDayClick);
+
+  document.getElementById("calendarBody").addEventListener('dblclick', handleDayDoubleClick);
 
   document.getElementById("addEventBtn").addEventListener('click', addEvent);
 
-  // Initially display the no events message for the current date
+  document.getElementById("eventInput").style.display = 'none';
+
   updateChecklist(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`);
 });
