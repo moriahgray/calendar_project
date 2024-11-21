@@ -4,36 +4,21 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  buildConfiguration: 'Release'
-
 steps:
-- task: NodeTool@0
-  displayName: 'Install Node.js'
+- script: echo "Preparing to archive static web assets"
+  displayName: 'Prepare Archive'
+
+- task: ArchiveFiles@2
+  displayName: 'Archive web app'
   inputs:
-    versionSpec: '14.x'
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/website.zip'
 
-- task: Npm@1
-  displayName: 'Run npm install'
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
   inputs:
-    verbose: false
-
-- script: 'npm run compile:sass'
-  displayName: 'Compile Sass assets'
-  workingDirectory: 'src'
-
-- task: Gulp@1
-  displayName: 'Run gulp tasks'
-  inputs:
-    gulpFile: 'gulpfile.js'
-    targets: 'build'
-    arguments: '--configuration $(buildConfiguration)'
-
-- script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
-  displayName: 'Write build info'
-  workingDirectory: 'src'
-
-- script: 'npm run build'
-  displayName: 'Build the project - Release'
-  env:
-    NODE_ENV: 'production'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
