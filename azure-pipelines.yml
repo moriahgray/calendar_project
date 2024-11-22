@@ -1,11 +1,11 @@
 trigger:
-- main  # Trigger the pipeline on commits to the main branch
+- main
 
 pool:
-  vmImage: 'ubuntu-latest'  # Specify the virtual machine image
+  vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'  # Define a variable for the build configuration
+  buildConfiguration: 'Release'
 
 steps:
 - script: echo "Starting build process..."
@@ -24,13 +24,24 @@ steps:
 - script: |
     npm run build
     echo "Build completed for $(buildConfiguration) configuration."
-  displayName: 'Run build and display message'
+    ls -la $(Build.SourcesDirectory)
+    ls -la $(Build.SourcesDirectory)/dist
+  displayName: 'Run build and debug output'
   env:
     NODE_ENV: 'production'
 
+- script: |
+    if [ -d "$(Build.SourcesDirectory)/dist" ]; then
+      echo "Dist directory exists."
+    else
+      echo "Dist directory does not exist. Exiting with error."
+      exit 1
+    fi
+  displayName: 'Check for dist directory'
+
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)/dist' 
+    rootFolderOrFile: '$(Build.SourcesDirectory)/dist'
     includeRootFolder: false
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/build-$(Build.BuildId).zip'
