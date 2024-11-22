@@ -12,30 +12,45 @@ steps:
 - task: Checkout@1
   displayName: 'Checkout Code'
 
-# Debug source directory
+# Debug Build Variables
+- script: |
+    echo "Debugging all available variables:"
+    env | grep Build
+  displayName: 'Debug Variables'
+
+# Debug Source Directory
 - script: |
     echo "Debugging the source directory:"
     echo "Listing all files in the source directory ($(Build.SourcesDirectory)):"
     ls -la $(Build.SourcesDirectory)
   displayName: 'Debug Source Directory'
 
-# Verify environment variables
+# Debug Environment Variables
 - script: |
     echo "Listing all available environment variables:"
     printenv
   displayName: 'Debug Environment Variables'
 
-# Verify static files exist
+# Create Artifact Staging Directory
 - script: |
-    if [ -f "$(Build.SourcesDirectory)/calendar.html" ] && [ -f "$(Build.SourcesDirectory)/calendar.js" ] && [ -f "$(Build.SourcesDirectory)/styles.css" ]; then
+    mkdir -p $(Build.ArtifactStagingDirectory)
+    echo "Artifact Staging Directory created at: $(Build.ArtifactStagingDirectory)"
+  displayName: 'Create Artifact Staging Directory'
+
+# Verify Static Files
+- script: |
+    echo "Checking for static files..."
+    if [ -f "$(Build.SourcesDirectory)/calendar.html" ] && \
+       [ -f "$(Build.SourcesDirectory)/calendar.js" ] && \
+       [ -f "$(Build.SourcesDirectory)/styles.css" ]; then
       echo "All required static files found."
     else
-      echo "One or more required static files are missing. Exiting with error."
+      echo "One or more required static files are missing."
       exit 1
     fi
   displayName: 'Verify Static Files'
 
-# Archive static files
+# Archive Static Files
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(Build.SourcesDirectory)'
@@ -44,7 +59,7 @@ steps:
     archiveFile: '$(Build.ArtifactStagingDirectory)/static-$(Build.BuildId).zip'
   displayName: 'Archive Static Files'
 
-# Publish static files as artifacts
+# Publish Static Files as Artifacts
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
