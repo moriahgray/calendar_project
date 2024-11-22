@@ -1,68 +1,32 @@
 trigger:
-- main
+- main  # Automatically triggers the pipeline on changes to the 'main' branch
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-latest'  # Specifies the agent pool
 
 variables:
-  buildConfiguration: 'Release'
+  buildConfiguration: 'Release'  # Define a variable for build configuration
 
 steps:
-# Checkout the repository
-- task: Checkout@1
-  displayName: 'Checkout Code'
-
-# Debug Build Variables
-- script: |
-    echo "Debugging all available variables:"
-    env | grep Build
-  displayName: 'Debug Variables'
-
-# Debug Source Directory
-- script: |
-    echo "Debugging the source directory:"
-    echo "Listing all files in the source directory ($(Build.SourcesDirectory)):"
-    ls -la $(Build.SourcesDirectory)
-  displayName: 'Debug Source Directory'
-
-# Debug Environment Variables
-- script: |
-    echo "Listing all available environment variables:"
-    printenv
-  displayName: 'Debug Environment Variables'
-
-# Create Artifact Staging Directory
-- script: |
-    mkdir -p $(Build.ArtifactStagingDirectory)
-    echo "Artifact Staging Directory created at: $(Build.ArtifactStagingDirectory)"
-  displayName: 'Create Artifact Staging Directory'
-
-# Verify Static Files
-- script: |
-    echo "Checking for static files..."
-    if [ -f "$(Build.SourcesDirectory)/calendar.html" ] && \
-       [ -f "$(Build.SourcesDirectory)/calendar.js" ] && \
-       [ -f "$(Build.SourcesDirectory)/styles.css" ]; then
-      echo "All required static files found."
-    else
-      echo "One or more required static files are missing."
-      exit 1
-    fi
-  displayName: 'Verify Static Files'
-
-# Archive Static Files
-- task: ArchiveFiles@2
+- task: NodeTool@0  # Task to install a specific version of Node.js
   inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/static-$(Build.BuildId).zip'
-  displayName: 'Archive Static Files'
+    versionSpec: '16.x'  # Specify the Node.js version
+    checkLatest: true
 
-# Publish Static Files as Artifacts
-- task: PublishBuildArtifacts@1
+- script: |
+    echo "Installing dependencies..."
+    npm install  # Install dependencies from package.json
+    echo "Dependencies installed."
+  displayName: 'Install Dependencies'
+
+- task: CopyFiles@2  # Task to copy application files to the build staging directory
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: '**/*'  # Copy all files in the directory
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1  # Task to publish build artifacts
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
-  displayName: 'Publish Static Files Artifact'
