@@ -1,5 +1,5 @@
 trigger:
-- main  # Trigger on changes to the main branch
+- main
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -8,30 +8,44 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- script: echo "Pipeline started. Preparing to build JavaScript web application..."
-  displayName: 'Starting Pipeline'
+- script: echo "Starting build process..."
+  displayName: 'Display Start Message'
 
-# Task 1: Install Node.js
+# Install Node.js
 - task: NodeTool@0
   inputs:
     versionSpec: '14.x'
-  displayName: 'Install Node.js'
+  displayName: 'Install Node.js 14.x'
 
-# Task 2: Install dependencies using npm
+# Install npm dependencies
 - task: Npm@1
   inputs:
     command: 'install'
-  displayName: 'Install npm dependencies'
+  displayName: 'Run npm install'
 
-# Task 3: Build the JavaScript web application
+# Run build and debug output
 - script: |
-    npm run build
-    echo "Build completed successfully for $(buildConfiguration) configuration."
-  displayName: 'Build JavaScript Web Application'
+    npm run build || { echo "Build failed. Exiting."; exit 1; }
+    echo "Build completed for $(buildConfiguration) configuration."
+    echo "Contents of the build sources directory:"
+    ls -la $(Build.SourcesDirectory)
+    echo "Contents of the dist directory:"
+    ls -la $(Build.SourcesDirectory)/dist || echo "Dist directory does not exist yet."
+  displayName: 'Run build and debug output'
   env:
     NODE_ENV: 'production'
 
-# Task 4: Archive build output
+# Verify dist directory exists
+- script: |
+    if [ -d "$(Build.SourcesDirectory)/dist" ]; then
+      echo "Dist directory exists."
+    else
+      echo "Error: Dist directory does not exist. Exiting with error."
+      exit 1
+    fi
+  displayName: 'Check for dist directory'
+
+# Archive build output
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(Build.SourcesDirectory)/dist'
@@ -40,10 +54,10 @@ steps:
     archiveFile: '$(Build.ArtifactStagingDirectory)/build-$(Build.BuildId).zip'
   displayName: 'Archive Build Output'
 
-# Task 5: Publish artifacts
+# Publish build artifact
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
-  displayName: 'Publish Build Artifacts'
+  displayName: 'Publish Build Artifact'
