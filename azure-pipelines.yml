@@ -27,10 +27,10 @@ steps:
 
 # Verify static files exist
 - script: |
-    if [ -f "$(Build.SourcesDirectory)/index.html" ]; then
-      echo "index.html found."
+    if [ -f "$(Build.SourcesDirectory)/calendar.html" ] && [ -f "$(Build.SourcesDirectory)/calendar.js" ] && [ -f "$(Build.SourcesDirectory)/styles.css" ]; then
+      echo "All required static files found."
     else
-      echo "index.html not found. Exiting with error."
+      echo "One or more required static files are missing. Exiting with error."
       exit 1
     fi
   displayName: 'Verify Static Files'
