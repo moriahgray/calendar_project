@@ -1,5 +1,5 @@
 trigger:
-- main
+- main  # Trigger on changes to the main branch
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -8,48 +8,42 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- script: echo "Starting build process..."
-  displayName: 'Display Start Message'
+- script: echo "Pipeline started. Preparing to build JavaScript web application..."
+  displayName: 'Starting Pipeline'
 
+# Task 1: Install Node.js
 - task: NodeTool@0
   inputs:
     versionSpec: '14.x'
-  displayName: 'Install Node.js 14.x'
+  displayName: 'Install Node.js'
 
+# Task 2: Install dependencies using npm
 - task: Npm@1
   inputs:
     command: 'install'
-  displayName: 'Run npm install'
+  displayName: 'Install npm dependencies'
 
+# Task 3: Build the JavaScript web application
 - script: |
     npm run build
-    echo "Build completed for $(buildConfiguration) configuration."
-    ls -la $(Build.SourcesDirectory)
-    ls -la $(Build.SourcesDirectory)/dist
-  displayName: 'Run build and debug output'
+    echo "Build completed successfully for $(buildConfiguration) configuration."
+  displayName: 'Build JavaScript Web Application'
   env:
     NODE_ENV: 'production'
 
-- script: |
-    if [ -d "$(Build.SourcesDirectory)/dist" ]; then
-      echo "Dist directory exists."
-    else
-      echo "Dist directory does not exist. Exiting with error."
-      exit 1
-    fi
-  displayName: 'Check for dist directory'
-
+# Task 4: Archive build output
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(Build.SourcesDirectory)/dist'
     includeRootFolder: false
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/build-$(Build.BuildId).zip'
-  displayName: 'Archive build output'
+  displayName: 'Archive Build Output'
 
+# Task 5: Publish artifacts
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
-  displayName: 'Publish build artifact'
+  displayName: 'Publish Build Artifacts'
