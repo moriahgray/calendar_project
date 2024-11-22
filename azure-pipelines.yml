@@ -12,11 +12,18 @@ steps:
 - task: Checkout@1
   displayName: 'Checkout Code'
 
-# Debug static files location
+# Debug source directory
 - script: |
-    echo "Checking for static files:"
+    echo "Debugging the source directory:"
+    echo "Listing all files in the source directory ($(Build.SourcesDirectory)):"
     ls -la $(Build.SourcesDirectory)
-  displayName: 'Debug Static Files Location'
+  displayName: 'Debug Source Directory'
+
+# Verify environment variables
+- script: |
+    echo "Listing all available environment variables:"
+    printenv
+  displayName: 'Debug Environment Variables'
 
 # Verify static files exist
 - script: |
