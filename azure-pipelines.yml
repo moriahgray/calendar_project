@@ -8,56 +8,39 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- script: echo "Starting build process..."
-  displayName: 'Display Start Message'
+# Checkout the repository
+- task: Checkout@1
+  displayName: 'Checkout Code'
 
-# Install Node.js
-- task: NodeTool@0
-  inputs:
-    versionSpec: '14.x'
-  displayName: 'Install Node.js 14.x'
-
-# Install npm dependencies
-- task: Npm@1
-  inputs:
-    command: 'install'
-  displayName: 'Run npm install'
-
-# Run build and debug output
+# Debug static files location
 - script: |
-    npm run build || { echo "Build failed. Exiting."; exit 1; }
-    echo "Build completed for $(buildConfiguration) configuration."
-    echo "Contents of the build sources directory:"
+    echo "Checking for static files:"
     ls -la $(Build.SourcesDirectory)
-    echo "Contents of the dist directory:"
-    ls -la $(Build.SourcesDirectory)/dist || echo "Dist directory does not exist yet."
-  displayName: 'Run build and debug output'
-  env:
-    NODE_ENV: 'production'
+  displayName: 'Debug Static Files Location'
 
-# Verify dist directory exists
+# Verify static files exist
 - script: |
-    if [ -d "$(Build.SourcesDirectory)/dist" ]; then
-      echo "Dist directory exists."
+    if [ -f "$(Build.SourcesDirectory)/index.html" ]; then
+      echo "index.html found."
     else
-      echo "Error: Dist directory does not exist. Exiting with error."
+      echo "index.html not found. Exiting with error."
       exit 1
     fi
-  displayName: 'Check for dist directory'
+  displayName: 'Verify Static Files'
 
-# Archive build output
+# Archive static files
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)/dist'
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
     includeRootFolder: false
     archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/build-$(Build.BuildId).zip'
-  displayName: 'Archive Build Output'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/static-$(Build.BuildId).zip'
+  displayName: 'Archive Static Files'
 
-# Publish build artifact
+# Publish static files as artifacts
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
-  displayName: 'Publish Build Artifact'
+  displayName: 'Publish Static Files Artifact'
