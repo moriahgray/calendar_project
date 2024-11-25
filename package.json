@@ -1,0 +1,8 @@
+{
+  "name": "calendar_project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/moriahgray/calendar_project",
+  "author": "moriahgray <moriah.gray.1@gmail.com>",
+  "license": "MIT"
+}

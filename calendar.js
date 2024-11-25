@@ -110,3 +110,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateChecklist(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`);
 });
+
+module.exports = { generateCalendar, addEvent, updateChecklist };
