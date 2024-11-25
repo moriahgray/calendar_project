@@ -1,17 +1,17 @@
 trigger:
-- main  # Automatically triggers the pipeline on changes to the 'main' branch
+- main
 
 pool:
-  vmImage: 'ubuntu-latest'  # Specifies the agent pool
+  vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'  # Define a variable for build configuration
+  buildConfiguration: 'Release' 
 
 steps:
-- task: NodeTool@0  # Task to install a specific version of Node.js
+- task: NodeTool@0
   inputs:
-    versionSpec: '16.x'  # Specify the Node.js version
-    checkLatest: true
+    versionSpec: '16.x'
+    checkLatest: true  
 
 - script: |
     echo "Installing dependencies..."
@@ -19,14 +19,31 @@ steps:
     echo "Dependencies installed."
   displayName: 'Install Dependencies'
 
-- task: CopyFiles@2  # Task to copy application files to the build staging directory
+- script: |
+    echo "Running Jest tests..."
+    npm test  # Runs tests defined in package.json
+    echo "Tests completed."
+  displayName: 'Run Jest Tests'
+  env:
+    CI: true 
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'JUnit' 
+    testResultsFiles: '**/test-results/junit.xml'
+    searchFolder: '$(System.DefaultWorkingDirectory)' 
+    failTaskOnFailedTests: true
+    testRunTitle: 'Jest Test Results'
+  condition: succeededOrFailed()
+
+- task: CopyFiles@2
   inputs:
     SourceFolder: '$(Build.SourcesDirectory)'
-    Contents: '**/*'  # Copy all files in the directory
+    Contents: '**/*'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
-- task: PublishBuildArtifacts@1  # Task to publish build artifacts
+- task: PublishBuildArtifacts@1 
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
-    publishLocation: 'Container'
+    publishLocation: 'Container' 
